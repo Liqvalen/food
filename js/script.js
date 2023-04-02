@@ -1,4 +1,4 @@
-window.addEventListener('DOMContentLoaded', () =>{
+window.addEventListener('DOMContentLoaded', () => {
     // tabs
     const tabs = document.querySelectorAll('.tabheader__item'), //ФИТНЕС ПРЕМИУМ СБАЛАНСИРОВАННОЕ
     tabsContent = document.querySelectorAll('.tabcontent'), //КАРТИНКА И ОПИСАНИЕ ТАБА
@@ -87,8 +87,7 @@ window.addEventListener('DOMContentLoaded', () =>{
     setClock('.timer', deadline)
     //modal window
     const modal = document.querySelector('.modal'),
-            btn = document.querySelectorAll('.btn'),
-            closeBtn = modal.querySelector('.modal__close')
+            btn = document.querySelectorAll('.btn')
 
 
     function openModal(){
@@ -103,9 +102,9 @@ window.addEventListener('DOMContentLoaded', () =>{
         modal.style.display = 'none'
         document.body.style.overflow = ''
     }
-    closeBtn.addEventListener('click', closeModal)
+    
     modal.addEventListener('click', (e) =>{
-        if(e.target === modal){
+        if(e.target === modal || e.target.getAttribute('data-close') == ''){
             closeModal()
         }
     })
@@ -188,48 +187,74 @@ window.addEventListener('DOMContentLoaded', () =>{
         '.menu .container',
         'menu__item'
     ).render()
+    
+    // forms
+    const forms = document.querySelectorAll('form')
+    const massage = {
+        loading: 'img/forms/054 spinner.svg',
+        success: 'Спасибо! мы скоро с вами свяжемся',
+        failer: 'Что-то пошло не так...'
+    }
 
+    forms.forEach(item =>{
+        postData(item)
+    })
+    function postData(form){
+        form.addEventListener('submit', (e) =>{
+            e.preventDefault()
+                
+            const statusMassage = document.createElement('img')
+            statusMassage.src = massage.loading
+            statusMassage.style.cssText = `
+                display: block;
+                margin: 0 auto;
+            `
+            form.append(statusMassage)
+            form.insertAdjacentElement('afterend', statusMassage)
 
+            const formData = new FormData(form)
 
+            const object = {}
+            formData.forEach(function(value,key){
+                object[key] = value
+            })
+            fetch('server.php', {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json'
+                }, 
+                body: JSON.stringify(object)
+            }).then(data => data.text())
+            .then(data => {
+                console.log(data);
+                showThanksModal(massage.success)
+                statusMassage.remove()
+            }).catch(() => {
+                showThanksModal(massage.failer)
+            }).finally(() => {
+                form.reset()
+            })
+        })
+    }
+    function showThanksModal(message) {
+        const prevModalDialog = document.querySelector('.modal__dialog')
+        prevModalDialog.classList.add('hide')
+        openModal()
 
-
-
-
-
-
-
-
-
-
-
-
-
-    // const parentItem = document.querySelector('.menu__item'),
-    //       description = parentItem.querySelector('.menu__item-descr'),
-    //       totalCost = parentItem.querySelector('.menu__item-total'),
-    //       subtitle = parentItem.querySelector('.menu__item-subtitle')
-
-    // console.log(parentItem.children[0].outerHTML);
-    // class VerticalRectangle {
-    //     constructor(description, totalCost, subtitle, image) {
-    //       this.description = description
-    //       this.totalCost = totalCost
-    //       this.subtitle = subtitle
-    //       this.image = image
-    //     }
-    //     createElement(){
-    //         description.innerHTML = this.description
-    //         totalCost.innerHTML = this.totalCost
-    //         subtitle.innerHTML = this.subtitle
-    //         console.log(this.subtitle);
-    //     }
-    //   }
-    // const rectangle0 = new VerticalRectangle('Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов.Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', `<div class="menu__item-total"><span>229</span> грн/день</div>`, 'Меню "Фитнес"')
-    // const rectangle1 = new VerticalRectangle('В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!', `<div class="menu__item-total"><span>550</span> грн/день</div>`, 'Меню "“Премиум”"')
-    // const rectangle2 = new VerticalRectangle('Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.', `<div class="menu__item-total"><span>430</span> грн/день</div>`, 'Меню "Постное"')
-    // rectangle0.createElement()
-    // rectangle1.createElement()
-    // rectangle2.createElement()
-    // parentItem.children[0].outerHTML = '<img src="img/tabs/post.jpg" alt="vegy"></img>'
-    // console.log(document.querySelector('.menu__item').children[0].outerHTML);
+        const thanksModal = document.createElement('div')
+        thanksModal.classList.add('modal__dialog')
+        thanksModal.innerHTML = `
+            <div class="modal__content">
+                <div class="modal__close" data-close>×</div>
+                <div class="modal__title">${message}</div> 
+            </div>
+        `
+        document.querySelector('.modal').append(thanksModal)
+        setTimeout(() => {
+            thanksModal.remove()
+            prevModalDialog.classList.add('show')
+            prevModalDialog.classList.remove('hide')
+            closeModal()
+        }, 4000)
+    }    
 })
